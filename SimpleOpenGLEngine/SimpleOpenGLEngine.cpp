@@ -15,6 +15,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow* window);
 
+/*
 float vertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -58,6 +59,7 @@ float vertices[] = {
 		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
+*/
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(0.0f, 0.0f, 0.0f),
@@ -76,7 +78,7 @@ glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 1.0f);
 glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-float camYaw = 0.0f;
+float camYaw = -90.0f;
 float camPitch = 0.0f;
 
 float deltaTime = 0.0f;
@@ -119,21 +121,39 @@ int main()
 
 	//-----------Finished OpenGL Init--------------
 
-	/*
 	float vertices[] =
 	{
-		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,
-		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
-		-0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 1.0f,   0.0f, 1.0f
+		 0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 1.0f,   0.0f, 1.0f,
+
+		 0.5f,  0.5f, 0.5f,    1.0f, 0.0f, 0.0f,   0.0f, 0.0f, //these uvs cause interesting shearing due to converting them from GLDrawArrays
+		 0.5f, -0.5f, 0.5f,    0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f,    0.0f, 0.0f, 1.0f,   1.0f, 1.0f,
+		-0.5f,  0.5f, 0.5f,    1.0f, 0.0f, 1.0f,   1.0f, 0.0f
 	};
 
 	unsigned int indices[] =
 	{
-		0, 1, 3,
-		1, 2, 3
+		0, 1, 3, //front
+		1, 2, 3,
+
+		5, 1, 0, //right 
+		0, 4, 5,
+	
+		0, 3, 7, //top
+		7, 4, 0,
+
+		3, 2, 6, //left
+		7, 3, 6,
+
+		2, 1, 5, //bottom
+		6, 2, 5,
+
+		7, 6, 5, //back
+		4, 7, 5
 	};
-	*/
 
 	Shader basicShader("main.vert", "main.frag");
 
@@ -163,27 +183,27 @@ int main()
 	//vertex data
 	unsigned int VBO;
 	unsigned int VAO;
-	//unsigned int EBO;
+	unsigned int EBO;
 	glGenBuffers(1, &VBO);
 	glGenVertexArrays(1, &VAO);
-	//glGenBuffers(1, &EBO);
+	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	//glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 
 	//Transformations
@@ -232,13 +252,14 @@ int main()
 			float angle = 20.0f * i;
 			tempModel = glm::rotate(tempModel, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(tempModel));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			//glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		}
 		glBindVertexArray(0);
 
 		/*
 		glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		//
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 		*/

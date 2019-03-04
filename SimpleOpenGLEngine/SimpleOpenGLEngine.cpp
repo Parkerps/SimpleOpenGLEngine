@@ -9,6 +9,7 @@
 
 #include"Shader.h"
 #include"stb_image.h"
+#include"Camera.h"
 
 //Prototypes
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -74,17 +75,19 @@ glm::vec3 cubePositions[] = {
 	glm::vec3(-1.3f, 1.0f, -1.5f)
 };
 
-glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 1.0f);
-glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-float camYaw = -90.0f;
-float camPitch = 0.0f;
+Camera camera = Camera(glm::vec3(0.0f, 0.0f, 1.0f));
+///glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 1.0f);
+///glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
+///glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+///float camYaw = -90.0f;
+///float camPitch = 0.0f;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-float fov = 45.0f;
+///float fov = 45.0f;
 
 double lastX = 0.0;
 double lastY = 0.0;
@@ -206,17 +209,16 @@ int main()
 	glEnableVertexAttribArray(2);
 
 
-	//Transformations
-	//glm::vec4 vec(0.0f, 0.0f, 0.0f, 1.0f);
+	//model transform
 	glm::mat4 model(1);
 	model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-	glm::mat4 cam = glm::lookAt(camPos, camPos + camFront, camUp);
+	//camera transform
+	glm::mat4 cam = camera.getCameraTransform(); ///glm::lookAt(camPos, camPos + camFront, camUp);
 
-	//vec = cam * vec;
-	//std::cout << vec.x << vec.y << vec.z << std::endl;
-
-	glm::mat4 proj = glm::perspective(glm::radians(fov), (float)width / (float)height, 0.1f, 100.0f);
+	//prospective transform
+	///glm::mat4 proj = glm::perspective(glm::radians(fov), (float)width / (float)height, 0.1f, 100.0f);
+	glm::mat4 proj = glm::perspective(glm::radians(camera.getFOV()), (float)width / (float)height, 0.1f, 100.0f);
 
 
 	//Main loop
@@ -225,8 +227,9 @@ int main()
 		//Input
 		processInput(window);
 
-		cam = glm::lookAt(camPos, camPos + camFront, camUp);
-		glm::mat4 proj = glm::perspective(glm::radians(fov), (float)width / (float)height, 0.01f, 100.0f);
+		cam = camera.getCameraTransform();///glm::lookAt(camPos, camPos + camFront, camUp);
+		glm::mat4 proj = glm::perspective(glm::radians(camera.getFOV()), (float)width / (float)height, 0.1f, 100.0f);
+		///glm::mat4 proj = glm::perspective(glm::radians(fov), (float)width / (float)height, 0.01f, 100.0f);
 
 		//render
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
@@ -257,13 +260,6 @@ int main()
 		}
 		glBindVertexArray(0);
 
-		/*
-		glBindVertexArray(VAO);
-		//
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-		*/
-
 		//check events and swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -275,10 +271,14 @@ int main()
 
 void processInput(GLFWwindow* window)
 {
+	
 	float currentframe = glfwGetTime();
 	deltaTime = currentframe - lastFrame;
 	lastFrame = currentframe;
 
+	camera.processGLFWInput(window, deltaTime);
+
+	/*
 	float camSpeed = 1.0f;
 	float camRotationSpeed = 90.0f;
 
@@ -315,6 +315,7 @@ void processInput(GLFWwindow* window)
 	camFront.x = cos(glm::radians(camPitch)) * cos(glm::radians(camYaw));
 	camFront.y = sin(glm::radians(camPitch));
 	camFront.z = cos(glm::radians(camPitch)) * sin(glm::radians(camYaw));
+	*/
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -346,10 +347,13 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 	xoffset *= sens;
 	yoffset *= sens;
 
-	camPitch += yoffset;
-	camYaw += xoffset;
+	camera.addPitch(yoffset);
+	camera.addYaw(xoffset);
 
-	camFront.x = cos(glm::radians(camPitch)) * cos(glm::radians(camYaw));
-	camFront.y = sin(glm::radians(camPitch));
-	camFront.z = cos(glm::radians(camPitch)) * sin(glm::radians(camYaw));
+	///camPitch += yoffset;
+	///camYaw += xoffset;
+	///
+	///camFront.x = cos(glm::radians(camPitch)) * cos(glm::radians(camYaw));
+	///camFront.y = sin(glm::radians(camPitch));
+	///camFront.z = cos(glm::radians(camPitch)) * sin(glm::radians(camYaw));
 }

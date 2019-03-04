@@ -6,7 +6,8 @@ cmake_minimum_required (VERSION 3.8)
 # Add source to this project's executable.
 add_executable (SimpleOpenGLEngine	"SimpleOpenGLEngine.cpp" "SimpleOpenGLEngine.h"
 									"Shader.cpp" "Shader.h"
-									"stb_image.cpp" "stb_image.h"                  #TODO: Change the way this is presented so that the stb_image files do not look like source code
+									"Camera.cpp" "Camera.h"
+									"stb_image.cpp" "stb_image.h"                  #TODO: Change the way this is presented so that the stb_image files and resource files do not look like source code
 									"uv2.jpg" "main.vert" "main.frag") 
 
 #resource files
